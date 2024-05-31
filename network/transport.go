@@ -4,7 +4,7 @@ package network
 type NetAddress string
 
 type RPC struct {
-	From	NetAddress	
+	From	NetAddress
 	Payload	[]byte
 }
 
@@ -12,5 +12,5 @@ type Transport interface {
 	Consume() <-chan RPC
 	Connect(Transport) error
 	SendMessage(NetAddress, []byte) error
-	Adress() NetAddress
+	Addr() NetAddress
 } 

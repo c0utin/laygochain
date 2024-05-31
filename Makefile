@@ -5,4 +5,4 @@ run: build
 	./bin/laygochain
 
 test:
-	go test ./... -v
+	go test ./... --v

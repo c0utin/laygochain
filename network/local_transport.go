@@ -5,49 +5,49 @@ import (
 	"sync"
 )
 
-type LocalTransport struct{
-	localAddr	NetAddress
-	consumeCh	chan	RPC
-	lock	sync.RWMutex
-	peers	map[NetAddress]*LocalTransport
+type LocalTransport struct {
+	addr      NetAddress
+	consumeCh chan RPC
+	lock      sync.RWMutex
+	peers     map[NetAddress]*LocalTransport
 }
 
-func NewLocalTransport(localAddr NetAddress) *LocalTransport {
-
+func NewLocalTransport(addr NetAddress) Transport {
 	return &LocalTransport{
-		localAddr: localAddr,
+		addr:      addr,
 		consumeCh: make(chan RPC, 1024),
-		peers: make(map[NetAddress]*LocalTransport),
+		peers:     make(map[NetAddress]*LocalTransport),
 	}
-} 
+}
 
 func (t *LocalTransport) Consume() <-chan RPC {
-
 	return t.consumeCh
 }
 
-func (t *LocalTransport) Connect(tr *LocalTransport) error {
-
+func (t *LocalTransport) Connect(tr Transport) error {
 	t.lock.Lock()
 	defer t.lock.Unlock()
 
-	t.peers[tr.Addr()] = tr
+	peer, ok := tr.(*LocalTransport)
+	if !ok {
+		return fmt.Errorf("invalid transport type")
+	}
 
+	t.peers[tr.Addr()] = peer
 	return nil
 }
 
-func(t *LocalTransport) SendMessage(destiny NetAddress, payload []byte) error {
-
+func (t *LocalTransport) SendMessage(to NetAddress, payload []byte) error {
 	t.lock.RLock()
 	defer t.lock.RUnlock()
 
-	peer, ok := t.peers[destiny]
+	peer, ok := t.peers[to]
 	if !ok {
-		return fmt.Errorf("%s: could not set message to address %s", t.localAddr,  destiny)
+		return fmt.Errorf("%s: could not send message to %s", t.addr, to)
 	}
 
 	peer.consumeCh <- RPC{
-		From: t.localAddr,
+		From:    t.addr,
 		Payload: payload,
 	}
 
@@ -55,7 +55,5 @@ func(t *LocalTransport) SendMessage(destiny NetAddress, payload []byte) error {
 }
 
 func (t *LocalTransport) Addr() NetAddress {
-	return t.localAddr
+	return t.addr
 }
-
-
