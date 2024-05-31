@@ -1,0 +1,5 @@
+# Output of the go build tool
+bin/
+build/
+dist/
+*.a
