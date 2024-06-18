@@ -2,6 +2,7 @@ package core
 
 import (
 	"bytes"
+	"fmt"
 	"testing"
 	"time"
 
@@ -29,6 +30,7 @@ func TestHeader_Encode_Decode(t *testing.T){
 }
 
 func TestBlock_Encode_Decode(t *testing.T) {
+
 	b := &Block{
 		Header: Header{
 			Version:   1,
@@ -47,3 +49,30 @@ func TestBlock_Encode_Decode(t *testing.T) {
 	assert.Nil(t, bDecode.DecodeBinary(buf))
 	assert.Equal(t, b, bDecode)
 }
+
+func TestBlock_Hash(t *testing.T){
+
+	b := &Block{
+		Header: Header{
+			Version:   1,
+			PrevBlock: types.RandomHash(),
+			Timestamp: uint64(time.Now().UnixNano()),
+			Height:    10,
+			Nonce:     989394,
+		},
+		Transactions: nil,
+	}
+
+	h := b.Hash()
+	fmt.Println(h.ToString())
+	assert.False(t, h.IsEmpty())
+}
+
+
+
+
+
+
+
+
+

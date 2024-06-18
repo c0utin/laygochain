@@ -1,6 +1,8 @@
 package core
 
 import (
+	"bytes"
+	"crypto/sha256"
 	"encoding/binary"
 	"io"
 
@@ -60,7 +62,28 @@ func(h *Header) DecodeBinary(r io.Reader) error {
 type Block struct{
 	Header
 	Transactions []Transaction
+
+	// cached version of header hash
+	hash types.Hash
+
 }
+
+func (b *Block) Hash() types.Hash {
+    buf := &bytes.Buffer{}
+    b.Header.EncodeBinary(buf)
+    for _, tx := range b.Transactions {
+        if err := tx.EncodeBinary(buf); err != nil {
+            panic(err)
+        }
+    }
+
+    if b.hash.IsEmpty() {
+        b.hash = types.Hash(sha256.Sum256(buf.Bytes()))
+    }
+
+    return b.hash
+}
+
 
 func(b *Block) EncodeBinary(w io.Writer) error {
 
